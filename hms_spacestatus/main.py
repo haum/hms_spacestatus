@@ -30,6 +30,7 @@ def main():
         get_logger().info("State changed: {}".format(newstate))
         rabbit.publish("spacestatus_state_changed", {"new_value": newstate})
         spacestatus_irc.send_status()
+        spacestatus_irc.send_twaum()
 
     spacestatus = SpaceStatus(settings.SPACESTATUS_FILE)
     spacestatus.state_changed_listenners.append(state_changed)

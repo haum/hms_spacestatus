@@ -164,3 +164,9 @@ class SpaceStatusIRC:
             msg = 'L’espace est ouvert !'
 
         self.irc_debug(msg)
+
+    def send_twaum(self):
+        if self.spacestatus.read_state():
+            self.irc_debug('@tweet INFO : notre espace est tout ouvert, n’hésitez pas à passer si vous le voulez/pouvez ! haum.org')
+        else:
+            self.irc_debug('@tweet Fin de session ! Jetez un œil à notre agenda sur haum.org pour connaître les prochaines ou surveillez notre fil twitter.')
