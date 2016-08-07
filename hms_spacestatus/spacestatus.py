@@ -158,6 +158,9 @@ class SpaceStatusIRC:
             self.irc_debug('Attention : l’espace est déjà fermé !')
         self.spacestatus.set_state(False)
 
+    def on_toggle(self):
+        self.spacestatus.set_state(not self.spacestatus.read_state())
+
     def send_status(self):
         msg = 'L’espace est fermé !'
         if self.spacestatus.read_state():
