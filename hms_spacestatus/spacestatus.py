@@ -1,3 +1,4 @@
+from os import path
 import time
 import logging
 
@@ -11,6 +12,8 @@ def get_logger():
     return logging.getLogger(__name__)
 
 class MyHandler(PatternMatchingEventHandler):
+
+    """Handler for the watchdog library."""
 
     def __init__(self):
         super().__init__(patterns = ["*"])
@@ -28,13 +31,20 @@ class MyHandler(PatternMatchingEventHandler):
 
 
 class SpaceStatus:
-    def __init__(self, dirpath, filepath):
-        self.dirpath = dirpath
+    def __init__(self, filepath):
+        """Default constructor."""
+        self.dirpath = path.dirname(filepath)
         self.filepath = filepath
         self.previous_state = self.read_state()
         self.state_changed_listenners = []
 
     def read_state(self):
+        """Read the current state.
+
+        Returns:
+            bool: True if the state is open, False otherwise
+
+        """
         get_logger().info("Reading status file {}...".format(self.filepath))
 
         try:
@@ -46,6 +56,16 @@ class SpaceStatus:
             return False
 
     def check_changed_state(self, event):
+        """Check if the state has changed and call listenners.
+
+        Args:
+            event: watchdog event
+
+        Returns:
+            bool: True if the state has changed and the listenners have been called,
+            False otherwise.
+
+        """
         state = self.read_state()
 
         if state != self.previous_state:
@@ -56,7 +76,12 @@ class SpaceStatus:
             for listenner in self.state_changed_listenners:
                 listenner(state)
 
+            return True
+
+        return False
+
     def monitor(self):
+        """Start infinite monitoring of the state status."""
         get_logger().info("Initial state is {}".format(self.previous_state))
         get_logger().info("Staring file watchdog monitor...")
 

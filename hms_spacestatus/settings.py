@@ -1,5 +1,3 @@
-from os import path
-
 # Configuration file for hms_spacestatus
 
 # RabbitMQ
@@ -12,4 +10,3 @@ RABBIT_ROUTING_KEYS = ['ping']              # List of routing keys to listen to
 # Spacestatus
 
 SPACESTATUS_FILE = '/var/haum/status'
-SPACESTATUS_DIRECTORY = path.dirname(SPACESTATUS_FILE)

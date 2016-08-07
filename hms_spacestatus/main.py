@@ -26,7 +26,7 @@ def main():
         get_logger().info("State changed: {}".format(newstate))
         rabbit.publish("spacestatus_state_changed", {"new_value": newstate})
 
-    spacestatus = SpaceStatus(settings.SPACESTATUS_DIRECTORY, settings.SPACESTATUS_FILE)
+    spacestatus = SpaceStatus(settings.SPACESTATUS_FILE)
     spacestatus.state_changed_listenners.append(state_changed)
 
     spacestatus.monitor()
