@@ -1,11 +1,10 @@
 from os import path
 import time
 import logging
+import inspect
 
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
-
-from hms_spacestatus import settings
 
 
 def get_logger():
@@ -37,6 +36,16 @@ class SpaceStatus:
         self.filepath = filepath
         self.previous_state = self.read_state()
         self.state_changed_listenners = []
+
+    def set_state(self, new_state):
+        """Set the current state of the API."""
+
+        get_logger().info("Writting new state {}...".format(new_state))
+
+        with open(self.filepath, 'w') as f:
+            f.write('1' if new_state else '0')
+
+        get_logger().info("Written new state {}.".format(new_state))
 
     def read_state(self):
         """Read the current state.
@@ -102,3 +111,56 @@ class SpaceStatus:
             observer.stop()
 
         observer.join()
+
+
+class SpaceStatusIRC:
+    def __init__(self, spacestatus, rabbit):
+        self.spacestatus = spacestatus
+        self.rabbit = rabbit
+
+    def irc_debug(self, msg):
+        self.rabbit.publish('irc_debug', {'privmsg': msg})
+
+    def irc_command_listener(self, client, topic, dct):
+        if dct['command'] == 'spacestatus':
+            command_args_dirty = dct['arg'].split(' ')
+            command_args = []
+
+            for x in command_args_dirty:
+                if x:
+                    command_args.append(x)
+
+            get_logger().info("Received spacestatus IRC command with args {}".format(command_args))
+
+            if len(command_args) == 0:
+                self.send_status()
+            else:
+                try:
+                    method = getattr(self, 'on_{}'.format(command_args[0]))
+                    method()
+                except AttributeError:
+                    self.irc_debug("Commande invalide")
+                    self.on_help()
+
+    def on_help(self):
+        methods = inspect.getmembers(self, predicate=inspect.ismethod)
+        commands = [method[0] for method in filter(lambda x: x[0].startswith('on_'), methods)]
+        commands_str = ', '.join(map(lambda x: x[3:], commands))
+        self.irc_debug('Aide : !spacestatus [{}]'.format(commands_str))
+
+    def on_open(self):
+        if self.spacestatus.read_state():
+            self.irc_debug('Attention : l’espace est déjà ouvert !'.format())
+        self.spacestatus.set_state(True)
+
+    def on_close(self):
+        if not self.spacestatus.read_state():
+            self.irc_debug('Attention : l’espace est déjà fermé !')
+        self.spacestatus.set_state(False)
+
+    def send_status(self):
+        msg = 'L’espace est fermé !'
+        if self.spacestatus.read_state():
+            msg = 'L’espace est ouvert !'
+
+        self.irc_debug(msg)
