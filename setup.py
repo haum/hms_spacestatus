@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 
 from os import path
 
@@ -33,5 +33,8 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
 
-    install_requires=['pika', 'hms_base>1.0,<2', 'irc', 'coloredlogs', 'watchdog']
+    install_requires=['pika', 'hms_base>1.0,<2', 'irc', 'coloredlogs', 'watchdog'],
+
+    test_suite='nose.collector',
+    tests_require=['nose'],
 )

@@ -1,0 +1,6 @@
+*.log
+*.substvars
+debhelper-build-stamp
+hms-spacestatus
+files
+*.debhelper

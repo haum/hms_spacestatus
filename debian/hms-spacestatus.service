@@ -1,0 +1,14 @@
+[Unit]
+Description=HAUM's space status microservice
+After=mutli-user.target
+Requires=multi-user.target
+
+[Service]
+Type=simple
+User=_hms-spacestatus
+ExecStart=/usr/share/python/hms-spacestatus/bin/hms_spacestatus_daemon
+Restart=on-failure
+RestartSec=360
+
+[Install]
+WantedBy=multi-user.target
