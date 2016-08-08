@@ -149,16 +149,28 @@ class SpaceStatusIRC:
         self.irc_debug('Aide : !spacestatus [{}]'.format(commands_str))
 
     def on_open(self):
+        self.on_open_silent()
+        self.send_twaum()
+
+    def on_open_silent(self):
         if self.spacestatus.read_state():
             self.irc_debug('Attention : l’espace est déjà ouvert !'.format())
         self.spacestatus.set_state(True)
 
     def on_close(self):
+        self.on_close_silent()
+        self.send_twaum()
+
+    def on_close_silent(self):
         if not self.spacestatus.read_state():
             self.irc_debug('Attention : l’espace est déjà fermé !')
         self.spacestatus.set_state(False)
 
     def on_toggle(self):
+        self.on_toggle_silent()
+        self.send_twaum()
+
+    def on_toggle_silent(self):
         self.spacestatus.set_state(not self.spacestatus.read_state())
 
     def send_status(self):
