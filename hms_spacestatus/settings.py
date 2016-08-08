@@ -9,4 +9,4 @@ RABBIT_ROUTING_KEYS = ['irc_command']       # List of routing keys to listen to
 
 # Spacestatus
 
-SPACESTATUS_FILE = '/var/haum/status'
+SPACESTATUS_FILE = '/var/spacestatus/status'
