@@ -1,0 +1,14 @@
+[Unit]
+Description=HAUM's spacestatus microservice
+After=mutli-user.target
+Requires=multi-user.target
+
+[Service]
+Type=simple
+User=hms_irc
+ExecStart=/home/hms_spacestatus/hms_spacestatus/systemd/run.sh
+Restart=on-failure
+RestartSec=360
+
+[Install]
+WantedBy=multi-user.target
