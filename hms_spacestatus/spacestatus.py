@@ -146,7 +146,8 @@ class SpaceStatusIRC:
         methods = inspect.getmembers(self, predicate=inspect.ismethod)
         commands = [method[0] for method in filter(lambda x: x[0].startswith('on_'), methods)]
         commands_str = ', '.join(map(lambda x: x[3:], commands))
-        self.irc_debug('Aide : !spacestatus [{}]'.format(commands_str))
+        self.irc_debug('Aide : !spacestatus pour voir si l’espace est ouvert')
+        self.irc_debug('Aide : autres commandes !spacestatus [{}]'.format(commands_str))
 
     def on_open(self):
         self.on_open_silent()
