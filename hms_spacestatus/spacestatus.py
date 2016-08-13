@@ -15,7 +15,7 @@ class SpaceStatus:
         self.state_changed_listenners = []
 
     def set_state(self, new_state):
-        """Set the current state of the API."""
+        """Set the current state of the space."""
 
         get_logger().info("Writting new state {}...".format(new_state))
 
@@ -25,7 +25,7 @@ class SpaceStatus:
         get_logger().info("Written new state {}.".format(new_state))
 
     def read_state(self):
-        """Read the current state.
+        """Read the current state of the space.
 
         Returns:
             bool: True if the state is open, False otherwise
@@ -57,7 +57,7 @@ class SpaceStatus:
         if state != self.previous_state:
             self.previous_state = state
 
-            get_logger().info("State has changed! Calling listenners...")
+            get_logger().info("State has changed! Calling listeners...")
 
             for listenner in self.state_changed_listenners:
                 listenner(state)

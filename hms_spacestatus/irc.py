@@ -8,14 +8,44 @@ def get_logger():
 
 class SpaceStatusIRC:
     def __init__(self, spacestatus, rabbit):
+        """Default constructor."""
         self.spacestatus = spacestatus
         self.rabbit = rabbit
 
+    # IRC messaging helpers
+
     def irc_debug(self, msg):
+        """Send a irc_debug message directly on the chan."""
         self.rabbit.publish('irc_debug', {'privmsg': msg})
 
+    def send_twaum(self):
+        """Send the corresponding tweet to twaum twitter bot."""
+        if self.spacestatus.read_state():
+            self.irc_debug('@tweet INFO : notre espace est tout ouvert, n’hésitez pas à passer si vous le voulez/pouvez ! haum.org')
+        else:
+            self.irc_debug('@tweet Fin de session ! Jetez un œil à notre agenda sur haum.org pour connaître les prochaines ou surveillez notre fil twitter.')
+
+    def send_status(self):
+        """Send the space status to IRC."""
+        msg = 'L’espace est fermé !'
+        if self.spacestatus.read_state():
+            msg = 'L’espace est ouvert !'
+
+        self.irc_debug(msg)
+
+    # Command handling
+
     def irc_command_listener(self, client, topic, dct):
+        """Listener that will be called on each irc command received.
+
+        It will call the corresponding on_* method of this class depending on
+        the provided argument.
+
+        """
         if dct['command'] == 'spacestatus':
+
+            # Command cleaning, maybe not optimal, maybe not beautiful, but does
+            # the job quite well.
             command_args_dirty = dct['arg'].split(' ')
             command_args = []
 
@@ -23,17 +53,26 @@ class SpaceStatusIRC:
                 if x:
                     command_args.append(x)
 
-            get_logger().info("Received spacestatus IRC command with args {}".format(command_args))
+            get_logger().info(
+                "Received spacestatus IRC command with args {}".format(
+                    command_args))
 
             if len(command_args) == 0:
+                #  No argument = display space status
                 self.send_status()
             else:
+                #  At least one argument = call internal on_* method if existing
                 try:
                     method = getattr(self, 'on_{}'.format(command_args[0]))
                     method()
                 except AttributeError:
                     self.irc_debug("Commande invalide")
                     self.on_help()
+
+    # Methods below will be called automatically depending on the word after
+    # the !spacestatus command (Python magic!)
+    #
+    # For example, !spacestatus open_silent will call on_open_silent method.
 
     def on_help(self):
         methods = inspect.getmembers(self, predicate=inspect.ismethod)
@@ -66,16 +105,3 @@ class SpaceStatusIRC:
 
     def on_toggle_silent(self):
         self.spacestatus.set_state(not self.spacestatus.read_state())
-
-    def send_status(self):
-        msg = 'L’espace est fermé !'
-        if self.spacestatus.read_state():
-            msg = 'L’espace est ouvert !'
-
-        self.irc_debug(msg)
-
-    def send_twaum(self):
-        if self.spacestatus.read_state():
-            self.irc_debug('@tweet INFO : notre espace est tout ouvert, n’hésitez pas à passer si vous le voulez/pouvez ! haum.org')
-        else:
-            self.irc_debug('@tweet Fin de session ! Jetez un œil à notre agenda sur haum.org pour connaître les prochaines ou surveillez notre fil twitter.')

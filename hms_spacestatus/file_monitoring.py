@@ -11,13 +11,19 @@ def get_logger():
 
 class MyHandler(PatternMatchingEventHandler):
 
-    """Handler for the watchdog library."""
+    """Custom handler for the watchdog library.
+
+    With this handler we want to monitor every file in a specific directory,
+    but only file creation and modification.
+
+    """
 
     def __init__(self):
         super().__init__(patterns = ["*"])
         self.listenners = []
 
     def process(self, event):
+        """Process an event by calling all listeners with event as arg."""
         for listenner in self.listenners:
             listenner(event)
 
@@ -30,6 +36,7 @@ class MyHandler(PatternMatchingEventHandler):
 
 class FileWatcher:
     def __init__(self, dirpath):
+        """Default constructor."""
         self.dirpath = dirpath
         self.listeners = []
 
@@ -37,18 +44,20 @@ class FileWatcher:
         """Start infinite monitoring of the state status."""
 
         get_logger().info("Staring file watchdog monitor...")
-
         event_handler = MyHandler()
 
+        # Rebind all listeners to the event handler
         for listener in self.listeners:
             event_handler.listenners.append(listener)
 
+        # Create and start file observer
         observer = Observer()
         observer.schedule(event_handler, self.dirpath, recursive=True)
         observer.start()
 
         get_logger().info("Started file watchdog monitor...")
 
+        # Infinite waiting loop
         try:
             while True:
                 time.sleep(1)
