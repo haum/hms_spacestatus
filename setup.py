@@ -10,7 +10,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='hms_spacestatus',
-    version='1.0',
+    version='1.1',
     packages=['hms_spacestatus'],
     scripts=['bin/hms_spacestatus_daemon'],
 
@@ -33,5 +33,5 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
 
-    install_requires=['pika', 'hms_base>1.0,<2', 'irc', 'coloredlogs', 'watchdog']
+    install_requires=['pika', 'hms_base>=2.0,<3', 'irc', 'coloredlogs', 'watchdog']
 )
