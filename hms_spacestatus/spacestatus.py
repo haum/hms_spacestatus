@@ -52,13 +52,15 @@ class SpaceStatus:
             False otherwise.
 
         """
+
         state = self.read_state()
 
+        # Check if state has changed
         if state != self.previous_state:
             self.previous_state = state
-
             get_logger().info("State has changed! Calling listeners...")
 
+            # Notify all listeners on state change
             for listenner in self.state_changed_listenners:
                 listenner(state)
 

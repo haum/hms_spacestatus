@@ -35,6 +35,9 @@ class MyHandler(PatternMatchingEventHandler):
 
 
 class FileWatcher:
+
+    """Class handling the passive watch of a specific directory."""
+
     def __init__(self, dirpath):
         """Default constructor."""
         self.dirpath = dirpath
@@ -61,9 +64,12 @@ class FileWatcher:
         try:
             while True:
                 time.sleep(1)
+
         except KeyboardInterrupt:
+            # Graceful shutdown
             get_logger().critical(
                 "Got a KeyboardInterrupt, stopping watchdog monitor...")
             observer.stop()
 
-        observer.join()
+        finally:
+            observer.join()
