@@ -10,6 +10,7 @@ from hms_spacestatus import settings
 from hms_spacestatus.spacestatus import SpaceStatus
 from hms_spacestatus.irc import SpaceStatusIRC
 from hms_spacestatus.file_monitoring import FileWatcher
+from hms_spacestatus.spaceapi import SpaceApi
 
 
 def get_logger():
@@ -31,8 +32,16 @@ def main():
     # SpaceStatus
     def state_changed(newstate):
         get_logger().info("State changed: {}".format(newstate))
+
+        # Publish the space status change over RabbitMQ for other microservices
         rabbit.publish("spacestatus_state_changed", {"new_value": newstate})
+
+        # Register the new state on SpaceAPI
+        spaceapi.set_state(newstate)
+
+        # Display the new state on irc and the state of SpaceAPI
         spacestatus_irc.send_status()
+        spacestatus_irc.send_spaceapi()
 
     # SpaceStatus object
     spacestatus = SpaceStatus(settings.SPACESTATUS_FILE)
@@ -40,8 +49,11 @@ def main():
 
     get_logger().info("Initial state is {}".format(spacestatus.previous_state))
 
+    # SpaceAPI object
+    spaceapi = SpaceApi()
+
     # SpaceStatusIRC
-    spacestatus_irc = SpaceStatusIRC(spacestatus, rabbit)
+    spacestatus_irc = SpaceStatusIRC(spacestatus, spaceapi, rabbit)
 
     # File monitoring
     filewacher = FileWatcher(spacestatus.dirpath)

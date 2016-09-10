@@ -7,9 +7,10 @@ def get_logger():
 
 
 class SpaceStatusIRC:
-    def __init__(self, spacestatus, rabbit):
+    def __init__(self, spacestatus, spaceapi, rabbit):
         """Default constructor."""
         self.spacestatus = spacestatus
+        self.spaceapi = spaceapi
         self.rabbit = rabbit
 
     # IRC messaging helpers
@@ -30,6 +31,19 @@ class SpaceStatusIRC:
         msg = 'L’espace est fermé !'
         if self.spacestatus.read_state():
             msg = 'L’espace est ouvert !'
+
+        self.irc_debug(msg)
+
+    def send_spaceapi(self):
+        """Send the SpaceAPI status to IRC."""
+        state = 'ouvert' if self.spaceapi.is_open() else 'fermé'
+        msg = '[SpaceAPI] L’espace est {}'.format(state)
+
+        if self.spaceapi.ssl_error:
+            msg += ' (certificat SSL invalide)'
+
+        if self.spaceapi.crash_error:
+            msg += ' (erreur globale !)'
 
         self.irc_debug(msg)
 
