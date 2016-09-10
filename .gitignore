@@ -1,3 +1,4 @@
 .idea
 __pycache__
 debian
+settings_prod.py
