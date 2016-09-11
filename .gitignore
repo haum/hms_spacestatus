@@ -3,3 +3,5 @@ __pycache__
 debian
 settings_prod.py
 venv
+htmlcov
+.coverage

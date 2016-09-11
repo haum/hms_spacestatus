@@ -39,11 +39,14 @@ class SpaceStatusIRC:
         state = 'ouvert' if self.spaceapi.is_open() else 'fermé'
         msg = '[SpaceAPI] L’espace est {}'.format(state)
 
-        if self.spaceapi.ssl_error:
+        if self.spaceapi.reqshield.ssl_error:
             msg += ' (certificat SSL invalide)'
 
-        if self.spaceapi.crash_error:
+        if self.spaceapi.reqshield.crash_error:
             msg += ' (erreur globale !)'
+
+        if self.spaceapi.reqshield.bad_http_code:
+            msg += ' (mauvais code http !)'
 
         self.irc_debug(msg)
 

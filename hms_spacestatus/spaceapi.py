@@ -16,15 +16,44 @@ def get_logger():
     return logging.getLogger(__name__)
 
 
-class SpaceApi:
+class RequestShield:
 
-    """Class handling interactions with SpaceAPI."""
+    """Class for securing HTTP call from exceptions.
+
+    This class uses advanced Python and may be difficult to understand at first.
+
+    Basically it allows to perform requests using the requests Python module,
+    but handles possible errors and set flags depending on the error type in
+    order to report it later.
+
+    Here is basic usage, when the HTTP server is functional:
+
+    >>> shield = RequestShield()
+    >>> shield(requests.get, "http://example.com")
+    <Response [200]>
+
+    However, if the HTTP server has problems, we get a None value and we can
+    read the flags to check what the error is:
+
+    >>> shield = RequestShield()
+    >>> shield(requests.get, "http://example.com")
+    None
+    >>> shield.ssl_error
+    True
+    >>> shield.crash_error
+    False
+
+    And that's it for this class.
+
+    It was written apart from the SpaceAPI class because of SRP (single
+    responsibility principle).
+
+    """
 
     def __init__(self):
         self.ssl_error = False
         self.crash_error = False
-
-    # Methods to handle problems of the API
+        self.bad_http_code = False
 
     def _unsafe_req(self, req, *args, **kwargs):
         """Perform an unsafe HTTP request, but try safe first."""
@@ -44,6 +73,7 @@ class SpaceApi:
             return req(*args, **kwargs)
 
     def _nocrash_req(self, *args, **kwargs):
+        """Perform an HTTP request and catch request exception."""
         try:
             # Perform unsafe request
             self.crash_error = False
@@ -51,8 +81,15 @@ class SpaceApi:
 
             # Check status code
             if r.status_code != 200:
+                self.bad_http_code = True
+
                 get_logger().warning('HTTP status code {} for SpaceAPI {}'
-                                   .format(r.status_code, r.url))
+                                     .format(r.status_code, r.url))
+
+                # If we have a bad status code, the JSON response have great
+                # chances of being incorrect, so we prefer to return empty
+                # response.
+                return None
 
             # And finally return the request
             return r
@@ -70,6 +107,18 @@ class SpaceApi:
             # Return nothing (to be handled by methods using this call)
             return None
 
+    def __call__(self, *args, **kwargs):
+        """Perform an HTTP request and catch whatever possible HTTP error."""
+        return self._nocrash_req(*args, **kwargs)
+
+
+class SpaceApi:
+
+    """Class handling interactions with SpaceAPI."""
+
+    def __init__(self):
+        self.reqshield = RequestShield()
+
     # Methods to interact with the API
 
     def _set_status(self, state):
@@ -80,11 +129,11 @@ class SpaceApi:
         data = {'key': settings.SPACEAPI_KEY, 'sensors': sensors_payload}
 
         # Perform POST request
-        self._nocrash_req(requests.post, SPACEAPI_SENSOR_URL, data=data)
+        self.reqshield(requests.post, SPACEAPI_SENSOR_URL, data=data)
 
 
     def _get_status(self):
-        return self._nocrash_req(requests.get, SPACEAPI_STATUS_URL)
+        return self.reqshield(requests.get, SPACEAPI_STATUS_URL)
 
     # We wrote the hardest part, now we can use these low level methods in some
     # higher level methods.
@@ -106,11 +155,11 @@ class SpaceApi:
 
     def open(self):
         """Opens the space."""
-        self._set_status(True)
+        self.set_state(True)
 
     def close(self):
         """Close the space."""
-        self._set_status(False)
+        self.set_state(False)
 
     def toggle(self):
         """Toggle the space, use with caution."""
