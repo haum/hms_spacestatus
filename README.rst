@@ -1,6 +1,9 @@
 HAUM's SpaceStatus microservice
 ===============================
 
+.. image:: https://coveralls.io/repos/github/haum/hms_spacestatus/badge.svg?branch=master
+    :target: https://coveralls.io/github/haum/hms_spacestatus?branch=master
+
 A microservice that handles the hackerspace's status.
 
 IRC commands
