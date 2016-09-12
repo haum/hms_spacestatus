@@ -6,6 +6,18 @@ def get_logger():
     return logging.getLogger(__name__)
 
 
+def voice_required(f):
+    """Decorator that checks if the sender is voiced."""
+    def wrapper(*args):
+        print(args)
+        if 'is_voiced' in args[1] and args[1]['is_voiced']:
+            return f(*args)
+        else:
+            args[0].irc_debug(
+                'On se connait ? Tu n’es pas voiced mon ami...')
+    return wrapper
+
+
 class SpaceStatusIRC:
     def __init__(self, spacestatus, spaceapi, rabbit):
         """Default constructor."""
@@ -81,44 +93,50 @@ class SpaceStatusIRC:
                 #  At least one argument = call internal on_* method if existing
                 try:
                     method = getattr(self, 'on_{}'.format(command_args[0]))
-                    method()
+                    method(dct)
                 except AttributeError:
                     self.irc_debug("Commande invalide")
-                    self.on_help()
+                    self.on_help(dct)
 
     # Methods below will be called automatically depending on the word after
     # the !spacestatus command (Python magic!)
     #
     # For example, !spacestatus open_silent will call on_open_silent method.
 
-    def on_help(self):
+    def on_help(self, dct):
         methods = inspect.getmembers(self, predicate=inspect.ismethod)
         commands = [method[0] for method in filter(lambda x: x[0].startswith('on_'), methods)]
         commands_str = ', '.join(map(lambda x: x[3:], commands))
         self.irc_debug('Aide : !spacestatus pour voir si l’espace est ouvert')
         self.irc_debug('Aide : autres commandes !spacestatus [{}]'.format(commands_str))
 
-    def on_open(self):
-        self.on_open_silent()
+    @voice_required
+    def on_open(self, dct):
+        self.on_open_silent(dct)
         self.send_twaum()
 
-    def on_open_silent(self):
+    @voice_required
+    def on_open_silent(self, dct):
         if self.spacestatus.read_state():
             self.irc_debug('Attention : l’espace est déjà ouvert !'.format())
         self.spacestatus.set_state(True)
 
-    def on_close(self):
-        self.on_close_silent()
+    @voice_required
+    def on_close(self, dct):
+        self.on_close_silent(dct)
         self.send_twaum()
 
-    def on_close_silent(self):
+    @voice_required
+    def on_close_silent(self, dct):
         if not self.spacestatus.read_state():
             self.irc_debug('Attention : l’espace est déjà fermé !')
         self.spacestatus.set_state(False)
 
-    def on_toggle(self):
-        self.on_toggle_silent()
+    @voice_required
+    def on_toggle(self, dct):
+        self.on_toggle_silent(dct)
         self.send_twaum()
 
-    def on_toggle_silent(self):
+    @voice_required
+    def on_toggle_silent(self, dct):
         self.spacestatus.set_state(not self.spacestatus.read_state())

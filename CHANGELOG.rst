@@ -8,6 +8,7 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 ------------
 
 - Added spaceapi backport
+- Allow opening and closing for voiced IRC staff only
 
 [1.1] - 2016-08-15
 ------------------
