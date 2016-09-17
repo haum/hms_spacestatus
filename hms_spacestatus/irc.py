@@ -107,6 +107,10 @@ class SpaceStatusIRC:
     # For example, !spacestatus open_silent will call on_open_silent method.
 
     def on_help(self, dct):
+        # TODO: temporary fix while we still rely on Combot for some tasks
+        if dct['nick'] == 'Com`bot':
+            return
+
         methods = inspect.getmembers(self, predicate=inspect.ismethod)
         commands = [method[0] for method in filter(lambda x: x[0].startswith('on_'), methods)]
         commands_str = ', '.join(map(lambda x: x[3:], commands))
