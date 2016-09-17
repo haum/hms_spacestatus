@@ -98,6 +98,9 @@ class SpaceStatusIRC:
                     self.irc_debug("Commande invalide")
                     self.on_help(dct)
 
+        elif dct['command'] == 'help':
+            self.on_help(dct)
+
     # Methods below will be called automatically depending on the word after
     # the !spacestatus command (Python magic!)
     #
@@ -107,8 +110,8 @@ class SpaceStatusIRC:
         methods = inspect.getmembers(self, predicate=inspect.ismethod)
         commands = [method[0] for method in filter(lambda x: x[0].startswith('on_'), methods)]
         commands_str = ', '.join(map(lambda x: x[3:], commands))
-        self.irc_debug('Aide : !spacestatus pour voir si l’espace est ouvert')
-        self.irc_debug('Aide : autres commandes !spacestatus [{}]'.format(commands_str))
+        self.irc_debug('Aide : !spacestatus pour voir si l’espace est ouvert, '
+                       'autres commandes : !spacestatus [{}]'.format(commands_str))
 
     @voice_required
     def on_open(self, dct):
