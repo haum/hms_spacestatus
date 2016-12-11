@@ -71,7 +71,7 @@ class SpaceStatusIRC:
         the provided argument.
 
         """
-        if dct['command'] == 'spacestatus':
+        if dct['command'].startswith('space'):
 
             # Command cleaning, maybe not optimal, maybe not beautiful, but does
             # the job quite well.
