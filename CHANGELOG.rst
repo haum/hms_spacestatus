@@ -7,7 +7,9 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 [Unreleased]
 ------------
 
-- Added spaceapi backport
+- Use generic queries and answers instead of implementing an IRC bot inside of
+  this service (breaking change)
+- Added SpaceAPI backport
 - Allow opening and closing for voiced IRC staff only
 
 [1.1] - 2016-08-15
