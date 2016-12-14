@@ -8,9 +8,11 @@ from hms_base.decorators import topic
 
 from hms_spacestatus import settings
 from hms_spacestatus.spacestatus import SpaceStatus
-from hms_spacestatus.irc import SpaceStatusIRC
 from hms_spacestatus.file_monitoring import FileWatcher
 from hms_spacestatus.spaceapi import SpaceApi
+
+
+CHANGE_STATUS_COMMANDS = ['open', 'open_silent', 'close', 'close_silent']
 
 
 def get_logger():
@@ -71,30 +73,30 @@ def main():
             data = {'is_open':  spacestatus.read_state()}
             rabbit.publish('spacestatus.answer', data)
 
-        elif command == 'open' or command == 'open_silent':
-            different_state = not spacestatus.read_state()
-            spacestatus.set_state(True)
+        elif command in CHANGE_STATUS_COMMANDS:
+            # Check what the user wants to do
+            will_open = command.startswith('open')
+            different_state = will_open != spacestatus.read_state()
 
+            # Set the internal state and external with bugged SpaceApi
+            spacestatus.set_state(will_open)
+            spaceapi.set_state(will_open)
+
+            # Send answer data using the message broker
             data = {
                 'is_open': spacestatus.read_state(),
-                'has_changed': different_state
+                'has_changed': different_state,
+                'spaceapi': {
+                    'is_open': spaceapi.is_open(),
+                    'ssl_error': spaceapi.reqshield.ssl_error,
+                    'bad_http_code': spaceapi.reqshield.bad_http_code,
+                    'global_error': spaceapi.reqshield.crash_error
+                }
             }
             rabbit.publish('spacestatus.answer', data)
 
-            if command != 'open_silent' and different_state:
-                rabbit.publish('spacestatus.broadcast', data)
-
-        elif command == 'close' or command == 'close_silent':
-            different_state = spacestatus.read_state()
-            spacestatus.set_state(False)
-
-            data = {
-                'is_open': spacestatus.read_state(),
-                'has_changed': different_state
-            }
-            rabbit.publish('spacestatus.answer', data)
-
-            if command != 'close_silent' and different_state:
+            # If new state and not silent, broadcast the status change
+            if not command.endswith('silent') and different_state:
                 rabbit.publish('spacestatus.broadcast', data)
 
     rabbit.listeners.append(query_closure)
