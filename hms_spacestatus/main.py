@@ -37,11 +37,11 @@ def main():
         rabbit.publish("spacestatus_state_changed", {"new_value": newstate})
 
         # Register the new state on SpaceAPI
-        spaceapi.set_state(newstate)
+        #spaceapi.set_state(newstate)
 
         # Display the new state on irc and the state of SpaceAPI
-        spacestatus_irc.send_status()
-        spacestatus_irc.send_spaceapi()
+        #spacestatus_irc.send_status()
+        #spacestatus_irc.send_spaceapi()
 
     # SpaceStatus object
     spacestatus = SpaceStatus(settings.SPACESTATUS_FILE)
@@ -51,9 +51,6 @@ def main():
 
     # SpaceAPI object
     spaceapi = SpaceApi()
-
-    # SpaceStatusIRC
-    spacestatus_irc = SpaceStatusIRC(spacestatus, spaceapi, rabbit)
 
     # File monitoring
     filewacher = FileWatcher(spacestatus.dirpath)
@@ -66,11 +63,41 @@ def main():
     monitor_thread.start()
 
     # Closure, cannot use @topic directly on method
-    @topic('irc_command')
-    def irc_closure(*args):
-        spacestatus_irc.irc_command_listener(*args)
+    @topic('spacestatus.query')
+    def query_closure(client, topic, dct):
+        command = dct['command']
 
-    rabbit.listeners.append(irc_closure)
+        if command == 'status':
+            data = {'is_open':  spacestatus.read_state()}
+            rabbit.publish('spacestatus.answer', data)
+
+        elif command == 'open' or command == 'open_silent':
+            different_state = not spacestatus.read_state()
+            spacestatus.set_state(True)
+
+            data = {
+                'is_open': spacestatus.read_state(),
+                'has_changed': different_state
+            }
+            rabbit.publish('spacestatus.answer', data)
+
+            if command != 'open_silent' and different_state:
+                rabbit.publish('spacestatus.broadcast', data)
+
+        elif command == 'close' or command == 'close_silent':
+            different_state = spacestatus.read_state()
+            spacestatus.set_state(False)
+
+            data = {
+                'is_open': spacestatus.read_state(),
+                'has_changed': different_state
+            }
+            rabbit.publish('spacestatus.answer', data)
+
+            if command != 'close_silent' and different_state:
+                rabbit.publish('spacestatus.broadcast', data)
+
+    rabbit.listeners.append(query_closure)
 
     get_logger().info("Starting passive consumming...")
     rabbit.start_consuming()
