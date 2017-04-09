@@ -91,7 +91,8 @@ def main():
                     'ssl_error': spaceapi.reqshield.ssl_error,
                     'bad_http_code': spaceapi.reqshield.bad_http_code,
                     'global_error': spaceapi.reqshield.crash_error
-                }
+                },
+                'source': dct['source']
             }
             rabbit.publish('spacestatus.answer', data)
 
