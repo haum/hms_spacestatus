@@ -11,6 +11,7 @@ A microservice that handles the hackerspace's status.
 
 IRC commands
 ------------
+
  * !spacestatus : displays the state's space
  * !spacestatus help : displays the commands
  * !spacestatus open : open the space and tweet it
@@ -38,4 +39,4 @@ License
 -------
 
 This project is brought to you under MIT license. For further information,
-please read the provided ``LICENSE.txt`` file.
+please read the provided ``LICENSE`` file.
