@@ -10,7 +10,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='hms_spacestatus',
-    version='1.1',
+    version='2.0',
     packages=['hms_spacestatus'],
     scripts=['bin/hms_spacestatus_daemon'],
 
