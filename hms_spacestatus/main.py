@@ -12,7 +12,7 @@ from hms_spacestatus.file_monitoring import FileWatcher
 from hms_spacestatus.spaceapi import SpaceApi
 
 
-CHANGE_STATUS_COMMANDS = ['open', 'open_silent', 'close', 'close_silent']
+CHANGE_STATUS_COMMANDS = ['open', 'open_silent', 'close', 'close_silent', 'toggle', 'toggle_silent']
 
 
 def get_logger():
@@ -75,7 +75,11 @@ def main():
 
         elif command in CHANGE_STATUS_COMMANDS:
             # Check what the user wants to do
-            will_open = command.startswith('open')
+            if command.startswith('toggle'):
+                will_open = not spacestatus.read_state()
+            else:
+                will_open = command.startswith('open')
+
             different_state = will_open != spacestatus.read_state()
 
             # Set the internal state and external with bugged SpaceApi
