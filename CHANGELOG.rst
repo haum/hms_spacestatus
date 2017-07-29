@@ -7,7 +7,11 @@ This project adheres to `Semantic Versioning <http://semver.org/>`__.
 [Unreleased]
 ------------
 
+[2.1] - 2017-07-29
+------------------
+
 - Added support for toggle command
+- Added Makefile for systemd service installation
 
 [2.0] - 2017-05-08
 ------------------
