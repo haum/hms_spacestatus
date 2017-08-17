@@ -9,8 +9,6 @@ from hms_base.decorators import topic
 from hms_spacestatus import settings
 from hms_spacestatus.spacestatus import SpaceStatus
 from hms_spacestatus.file_monitoring import FileWatcher
-from hms_spacestatus.spaceapi import SpaceApi
-
 
 CHANGE_STATUS_COMMANDS = ['open', 'open_silent', 'close', 'close_silent', 'toggle', 'toggle_silent']
 
@@ -38,21 +36,11 @@ def main():
         # Publish the space status change over RabbitMQ for other microservices
         rabbit.publish("spacestatus_state_changed", {"new_value": newstate})
 
-        # Register the new state on SpaceAPI
-        #spaceapi.set_state(newstate)
-
-        # Display the new state on irc and the state of SpaceAPI
-        #spacestatus_irc.send_status()
-        #spacestatus_irc.send_spaceapi()
-
     # SpaceStatus object
     spacestatus = SpaceStatus(settings.SPACESTATUS_FILE)
     spacestatus.state_changed_listenners.append(state_changed)
 
     get_logger().info("Initial state is {}".format(spacestatus.previous_state))
-
-    # SpaceAPI object
-    spaceapi = SpaceApi()
 
     # File monitoring
     filewacher = FileWatcher(spacestatus.dirpath)
@@ -82,20 +70,13 @@ def main():
 
             different_state = will_open != spacestatus.read_state()
 
-            # Set the internal state and external with bugged SpaceApi
+            # Set the internal state
             spacestatus.set_state(will_open)
-            spaceapi.set_state(will_open)
 
             # Send answer data using the message broker
             data = {
                 'is_open': spacestatus.read_state(),
                 'has_changed': different_state,
-                'spaceapi': {
-                    'is_open': spaceapi.is_open(),
-                    'ssl_error': spaceapi.reqshield.ssl_error,
-                    'bad_http_code': spaceapi.reqshield.bad_http_code,
-                    'global_error': spaceapi.reqshield.crash_error
-                },
                 'source': dct['source']
             }
             rabbit.publish('spacestatus.answer', data)
